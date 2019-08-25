@@ -1,5 +1,8 @@
 package com.rathana.asynctaskdemo;
 
+import android.content.Intent;
+import android.support.annotation.Nullable;
+import android.support.design.widget.FloatingActionButton;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.LinearLayoutManager;
@@ -12,6 +15,8 @@ import com.rathana.asynctaskdemo.data.ServiceGenerator;
 import com.rathana.asynctaskdemo.data.service.ArticleService;
 import com.rathana.asynctaskdemo.model.Article;
 import com.rathana.asynctaskdemo.model.ArticleResponse;
+import com.rathana.asynctaskdemo.model.Author;
+import com.rathana.asynctaskdemo.model.Category;
 import com.rathana.asynctaskdemo.model.DeleteArticleResponse;
 import com.rathana.asynctaskdemo.util.DownloadAsyncTask;
 
@@ -32,15 +37,46 @@ public class MainActivity extends AppCompatActivity
 
     ArticleService articleService;
 
+    FloatingActionButton btnAdd;
+
+    static  final int ADD_ARTICLE_CODE=1;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
         articleService = ServiceGenerator.createService(ArticleService.class);
-
+        btnAdd=findViewById(R.id.btnAdd);
         initUI();
         getArticles(1,20);
+
+
+        btnAdd.setOnClickListener(v->{
+            Intent intent =new Intent(this,AddArticleActivity.class);
+            startActivityForResult(intent,ADD_ARTICLE_CODE);
+        });
+
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+
+        if(requestCode==ADD_ARTICLE_CODE && resultCode==RESULT_OK){
+            Article article= data.getParcelableExtra("article");
+            Category category=data.getParcelableExtra("category");
+            Author author= data.getParcelableExtra("author");
+            try {
+                if(article!=null && category!=null && author!=null){
+                    article.setAuthor(author);
+                    article.setCategory(category);
+                    articleAdapter.addItem(article);
+                    rvArticle.smoothScrollToPosition(0);
+                }
+            }catch (Exception e){
+
+            }
+        }
     }
 
     void initUI(){

@@ -91,6 +91,10 @@ public class ArticleAdapter extends RecyclerView.Adapter<ArticleAdapter.ViewHold
         notifyItemChanged(pos);
     }
 
+    public void addItem(Article article){
+        this.articles.add(0,article);
+        notifyItemInserted(0);
+    }
     class ViewHolder extends RecyclerView.ViewHolder{
         TextView title ,date,author,category;
         ImageView thumb,btnFavorite,btnDel,btnEdit;

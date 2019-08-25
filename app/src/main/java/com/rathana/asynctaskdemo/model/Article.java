@@ -1,8 +1,11 @@
 package com.rathana.asynctaskdemo.model;
 
+import android.os.Parcel;
+import android.os.Parcelable;
+
 import com.google.gson.annotations.SerializedName;
 
-public class Article {
+public class Article implements Parcelable {
     @SerializedName("IMAGE")
     private String image;
     @SerializedName("CATEGORY")
@@ -19,6 +22,27 @@ public class Article {
     private String title;
     @SerializedName("ID")
     private int id;
+
+    protected Article(Parcel in) {
+        image = in.readString();
+        status = in.readString();
+        createdDate = in.readString();
+        description = in.readString();
+        title = in.readString();
+        id = in.readInt();
+    }
+
+    public static final Creator<Article> CREATOR = new Creator<Article>() {
+        @Override
+        public Article createFromParcel(Parcel in) {
+            return new Article(in);
+        }
+
+        @Override
+        public Article[] newArray(int size) {
+            return new Article[size];
+        }
+    };
 
     public String getImage() {
         return image;
@@ -82,5 +106,20 @@ public class Article {
 
     public void setId(int id) {
         this.id = id;
+    }
+
+    @Override
+    public int describeContents() {
+        return 0;
+    }
+
+    @Override
+    public void writeToParcel(Parcel dest, int flags) {
+        dest.writeString(image);
+        dest.writeString(status);
+        dest.writeString(createdDate);
+        dest.writeString(description);
+        dest.writeString(title);
+        dest.writeInt(id);
     }
 }

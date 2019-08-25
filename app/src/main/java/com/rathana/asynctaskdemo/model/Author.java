@@ -1,8 +1,11 @@
 package com.rathana.asynctaskdemo.model;
 
+import android.os.Parcel;
+import android.os.Parcelable;
+
 import com.google.gson.annotations.SerializedName;
 
-public class Author {
+public class Author implements Parcelable {
     @SerializedName("IMAGE_URL")
     private String imageUrl;
     @SerializedName("FACEBOOK_ID")
@@ -19,6 +22,29 @@ public class Author {
     private String name;
     @SerializedName("ID")
     private int id;
+
+    protected Author(Parcel in) {
+        imageUrl = in.readString();
+        facebookId = in.readString();
+        status = in.readString();
+        telephone = in.readString();
+        gender = in.readString();
+        email = in.readString();
+        name = in.readString();
+        id = in.readInt();
+    }
+
+    public static final Creator<Author> CREATOR = new Creator<Author>() {
+        @Override
+        public Author createFromParcel(Parcel in) {
+            return new Author(in);
+        }
+
+        @Override
+        public Author[] newArray(int size) {
+            return new Author[size];
+        }
+    };
 
     public String getImageUrl() {
         return imageUrl;
@@ -82,5 +108,22 @@ public class Author {
 
     public void setId(int id) {
         this.id = id;
+    }
+
+    @Override
+    public int describeContents() {
+        return 0;
+    }
+
+    @Override
+    public void writeToParcel(Parcel dest, int flags) {
+        dest.writeString(imageUrl);
+        dest.writeString(facebookId);
+        dest.writeString(status);
+        dest.writeString(telephone);
+        dest.writeString(gender);
+        dest.writeString(email);
+        dest.writeString(name);
+        dest.writeInt(id);
     }
 }
