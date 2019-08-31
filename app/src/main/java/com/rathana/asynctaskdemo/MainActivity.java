@@ -19,6 +19,7 @@ import com.rathana.asynctaskdemo.model.Author;
 import com.rathana.asynctaskdemo.model.Category;
 import com.rathana.asynctaskdemo.model.DeleteArticleResponse;
 import com.rathana.asynctaskdemo.util.DownloadAsyncTask;
+import com.rathana.asynctaskdemo.util.LoadMoreLinearLayoutManager;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -40,6 +41,9 @@ public class MainActivity extends AppCompatActivity
     FloatingActionButton btnAdd;
 
     static  final int ADD_ARTICLE_CODE=1;
+    static final int EDIT_CODE_REQUEST=2;
+    int page=1;
+    LoadMoreLinearLayoutManager layoutManager;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -48,7 +52,7 @@ public class MainActivity extends AppCompatActivity
         articleService = ServiceGenerator.createService(ArticleService.class);
         btnAdd=findViewById(R.id.btnAdd);
         initUI();
-        getArticles(1,20);
+        //getArticles(1,20);
 
 
         btnAdd.setOnClickListener(v->{
@@ -81,19 +85,65 @@ public class MainActivity extends AppCompatActivity
 
     void initUI(){
         rvArticle=findViewById(R.id.rvArticle);
-        LinearLayoutManager manager=new LinearLayoutManager(this);
+        //LinearLayoutManager manager=new LinearLayoutManager(this);
+        getArticles(1,15);
+        layoutManager=new LoadMoreLinearLayoutManager(this);
         articleAdapter=new ArticleAdapter(articles,this);
+        articleAdapter.setCanLoadMore(false);
         rvArticle.setAdapter(articleAdapter);
-        rvArticle.setLayoutManager(manager);
+        rvArticle.setLayoutManager(layoutManager);
         articleAdapter.setCallback(this);
-}
 
+        //scroll load more item
+        layoutManager.setLoadMOreListener(new LoadMoreLinearLayoutManager.OnLoadMOreListener() {
+            @Override
+            public void onLoadMore() {
+                page++;
+                getMoreArticles(page,15);
+            }
+        });
+
+    }
+
+    //get first page
     private void getArticles(long page,long limit){
         articleService.getArticles(page,limit).enqueue(new Callback<ArticleResponse>() {
             @Override
             public void onResponse(Call<ArticleResponse> call, Response<ArticleResponse> response) {
                 List<Article> articles= response.body().getArticle();
+                //articleAdapter.addMoreItems(articles);
+                MainActivity.this.articles.addAll(articles);
+                articleAdapter.setCanLoadMore(true);
+                articleAdapter.notifyDataSetChanged();
+//                if(articles.size()>=limit){
+//
+//                }else{
+//                    articleAdapter.setCanLoadMore(false);
+//                }
+                layoutManager.loadingFinished();
+                Log.e(TAG, "onResponse: item Count "+articleAdapter.getItemCount() );
+            }
+
+            @Override
+            public void onFailure(Call<ArticleResponse> call, Throwable t) {
+                Log.e(TAG, "onFailure: "+ t.toString() );
+            }
+        });
+    }
+
+    private void getMoreArticles(long page,long limit){
+        articleService.getArticles(page,limit).enqueue(new Callback<ArticleResponse>() {
+            @Override
+            public void onResponse(Call<ArticleResponse> call, Response<ArticleResponse> response) {
+                List<Article> articles= response.body().getArticle();
                 articleAdapter.addMoreItems(articles);
+                if(articles.size()>=limit){
+                    articleAdapter.setCanLoadMore(true);
+                }else{
+                    articleAdapter.setCanLoadMore(false);
+                }
+                layoutManager.loadingFinished();
+                Log.e(TAG, "onResponse: item Count "+articleAdapter.getItemCount() );
             }
 
             @Override
@@ -125,8 +175,15 @@ public class MainActivity extends AppCompatActivity
         });
     }
 
+   int updateItemPos;
     @Override
     public void onEdit(Article article, int pos) {
+        updateItemPos=pos;
+        Intent intent=new Intent(this,EditArticleActivity.class);
+        intent.putExtra("article",article);
+        intent.putExtra("category",article.getCategory());
+        intent.putExtra("author",article.getAuthor());
+        startActivityForResult(intent,EDIT_CODE_REQUEST);
 
     }
 

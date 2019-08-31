@@ -19,9 +19,19 @@ import org.w3c.dom.Text;
 
 import java.util.List;
 
-public class ArticleAdapter extends RecyclerView.Adapter<ArticleAdapter.ViewHolder> {
+public class ArticleAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
     private List<Article> articles;
     private Context context;
+
+    private boolean canLoadMore = false;
+
+    static final int LOADING_LAYOUT = -1;
+    static final int NORMAL_LAYOUT = -2;
+
+    public void setCanLoadMore(boolean canLoadMore) {
+        this.canLoadMore = canLoadMore;
+    }
+
 
     public ArticleAdapter(List<Article> articles, Context context) {
         this.articles = articles;
@@ -29,88 +39,125 @@ public class ArticleAdapter extends RecyclerView.Adapter<ArticleAdapter.ViewHold
     }
 
     @Override
-    public int getItemCount() {
-        return articles.size();
+    public int getItemViewType(int position) {
+        if (position < articles.size())
+            return NORMAL_LAYOUT;
+        else
+            return LOADING_LAYOUT;
     }
 
     @Override
-    public void onBindViewHolder(@NonNull ViewHolder viewHolder, int i) {
-        Article article= articles.get(i);
-        Category category=article.getCategory();
-        Author author= article.getAuthor();
+    public int getItemCount() {
+        if (canLoadMore)
+            return articles.size() + 1;
+        else
+            return articles.size();
+    }
 
-        viewHolder.title.setText(article.getTitle()!=null ? article.getTitle(): "");
-        viewHolder.author.setText(author.getName()!=null? author.getName():"");
-        viewHolder.date.setText(DateFormatter.format(article.getCreatedDate()));
-        viewHolder.category.setText(category.getName()!=null ? category.getName():"");
-        //image
-        //todo bind image to image View
-        if(article.getImage()!=null){
-            Glide.with(context)
-                    .load(article.getImage())
-                    .override(250,160)
-                    .error(R.drawable.ic_picture)
-                    .placeholder(R.drawable.ic_picture)
-                    .into(viewHolder.thumb);
-        }else{
-            viewHolder.thumb.setImageResource(R.drawable.ic_picture);
+    @Override
+    public void onBindViewHolder(@NonNull RecyclerView.ViewHolder viewHolder, int i) {
+
+        if (viewHolder instanceof ViewHolder) {
+            Article article = articles.get(i);
+            Category category = article.getCategory();
+            Author author = article.getAuthor();
+            ((ViewHolder) viewHolder).binding(article, category, author);
         }
 
-        //setEvent
-        viewHolder.btnDel.setOnClickListener(v-> {
-            if(callback!=null)
-                callback.onDelete(article,viewHolder.getAdapterPosition());
-        });
-
-        viewHolder.btnEdit.setOnClickListener(v->{
-            callback.onEdit(article,viewHolder.getAdapterPosition());
-        });
     }
 
     @NonNull
     @Override
-    public ViewHolder onCreateViewHolder(@NonNull ViewGroup viewGroup, int i) {
-        View view= LayoutInflater.from(context)
-                .inflate(R.layout.article_item_layout,viewGroup,false);
+    public RecyclerView.ViewHolder onCreateViewHolder(@NonNull ViewGroup viewGroup, int itemViewType) {
+        if (itemViewType == NORMAL_LAYOUT) {
+            View view = LayoutInflater.from(context)
+                    .inflate(R.layout.article_item_layout, viewGroup, false);
+            return new ViewHolder(view);
 
-        return new ViewHolder(view);
+        } else {
+            return new LoadingViewHolder(
+                    LayoutInflater.from(context).inflate(
+                            R.layout.progressbar_layout,
+                            viewGroup,
+                            false
+                    )
+            );
+        }
     }
 
-    public void addMoreItems(List<Article> articles){
-        int previousSize= this.articles.size();
+    public void addMoreItems(List<Article> articles) {
+        int previousSize = this.articles.size();
         this.articles.addAll(articles);
-        notifyItemRangeInserted(previousSize,articles.size());
+        notifyItemRangeInserted(previousSize, articles.size());
     }
 
-    public void remove(Article article,int pos){
+    public void remove(Article article, int pos) {
         this.articles.remove(article);
         notifyItemRemoved(pos);
     }
-    public void update(Article article,int pos){
-        this.articles.set(pos,article);
+
+    public void update(Article article, int pos) {
+        this.articles.set(pos, article);
         notifyItemChanged(pos);
     }
 
-    public void addItem(Article article){
-        this.articles.add(0,article);
+    public void addItem(Article article) {
+        this.articles.add(0, article);
         notifyItemInserted(0);
     }
-    class ViewHolder extends RecyclerView.ViewHolder{
-        TextView title ,date,author,category;
-        ImageView thumb,btnFavorite,btnDel,btnEdit;
+
+    class ViewHolder extends RecyclerView.ViewHolder {
+        TextView title, date, author, category;
+        ImageView thumb, btnFavorite, btnDel, btnEdit;
 
         public ViewHolder(@NonNull View itemView) {
             super(itemView);
 
-            title=itemView.findViewById(R.id.title);
-            date=itemView.findViewById(R.id.date);
-            author=itemView.findViewById(R.id.author);
-            category=itemView.findViewById(R.id.category);
-            thumb=itemView.findViewById(R.id.thumb);
-            btnFavorite=itemView.findViewById(R.id.favorite);
+            title = itemView.findViewById(R.id.title);
+            date = itemView.findViewById(R.id.date);
+            author = itemView.findViewById(R.id.author);
+            category = itemView.findViewById(R.id.category);
+            thumb = itemView.findViewById(R.id.thumb);
+            btnFavorite = itemView.findViewById(R.id.favorite);
 
-            btnDel=itemView.findViewById(R.id.btnDel);
-            btnEdit=itemView.findViewById(R.id.btnedit);
+            btnDel = itemView.findViewById(R.id.btnDel);
+            btnEdit = itemView.findViewById(R.id.btnedit);
+        }
+
+        public void binding(Article article, Category cat, Author user) {
+            title.setText(article.getTitle() != null ? article.getTitle() : "");
+            author.setText(user.getName() != null ? user.getName() : "");
+            date.setText(DateFormatter.format(article.getCreatedDate()));
+            category.setText(cat.getName() != null ? cat.getName() : "");
+            //image
+            //todo bind image to image View
+            if (article.getImage() != null) {
+                Glide.with(context)
+                        .load(article.getImage())
+                        .override(250, 160)
+                        .error(R.drawable.ic_picture)
+                        .placeholder(R.drawable.ic_picture)
+                        .into(thumb);
+            } else {
+                thumb.setImageResource(R.drawable.ic_picture);
+            }
+
+            //setEvent
+            btnDel.setOnClickListener(v -> {
+                if (callback != null)
+                    callback.onDelete(article, getAdapterPosition());
+            });
+
+            btnEdit.setOnClickListener(v -> {
+                callback.onEdit(article, getAdapterPosition());
+            });
+
+        }
+    }
+
+    class LoadingViewHolder extends RecyclerView.ViewHolder {
+        public LoadingViewHolder(@NonNull View itemView) {
+            super(itemView);
         }
     }
 
@@ -120,8 +167,9 @@ public class ArticleAdapter extends RecyclerView.Adapter<ArticleAdapter.ViewHold
         this.callback = callback;
     }
 
-    public interface ArticleCallback{
+    public interface ArticleCallback {
         void onDelete(Article article, int pos);
+
         void onEdit(Article article, int pos);
     }
 }

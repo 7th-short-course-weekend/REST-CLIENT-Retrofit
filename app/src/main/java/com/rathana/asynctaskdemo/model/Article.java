@@ -23,6 +23,20 @@ public class Article implements Parcelable {
     @SerializedName("ID")
     private int id;
 
+    @Override
+    public String toString() {
+        return "Article{" +
+                "image='" + image + '\'' +
+                ", category=" + category +
+                ", status='" + status + '\'' +
+                ", author=" + author +
+                ", createdDate='" + createdDate + '\'' +
+                ", description='" + description + '\'' +
+                ", title='" + title + '\'' +
+                ", id=" + id +
+                '}';
+    }
+
     protected Article(Parcel in) {
         image = in.readString();
         status = in.readString();

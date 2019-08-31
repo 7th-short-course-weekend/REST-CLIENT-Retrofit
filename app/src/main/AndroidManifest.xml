@@ -14,6 +14,7 @@
         android:theme="@style/AppTheme">
         <activity android:name=".AddArticleActivity"></activity>
         <activity android:name=".CategoryActivity"></activity>
+        <activity android:name=".EditArticleActivity"/>
         <activity android:name=".MainActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />

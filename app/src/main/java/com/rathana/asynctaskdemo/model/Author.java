@@ -23,6 +23,20 @@ public class Author implements Parcelable {
     @SerializedName("ID")
     private int id;
 
+    @Override
+    public String toString() {
+        return "Author{" +
+                "imageUrl='" + imageUrl + '\'' +
+                ", facebookId='" + facebookId + '\'' +
+                ", status='" + status + '\'' +
+                ", telephone='" + telephone + '\'' +
+                ", gender='" + gender + '\'' +
+                ", email='" + email + '\'' +
+                ", name='" + name + '\'' +
+                ", id=" + id +
+                '}';
+    }
+
     protected Author(Parcel in) {
         imageUrl = in.readString();
         facebookId = in.readString();
